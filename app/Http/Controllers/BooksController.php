@@ -113,7 +113,34 @@ class BooksController extends Controller {
 	 * @return \Illuminate\Http\Response
 	 */
 	public function update(Request $request, $id) {
-		//
+		$validator = $this->validator($request->all());
+
+		if ($validator->fails()) {
+			$this->throwValidationException(
+				$request, $validator
+			);
+		}
+		$book = Book::findOrFail($id);
+		if ($file = $request->hasFile('image')) {
+
+			$file = $request->file('image');
+
+			$bookfile = $book->name . '.' .
+			$request->file('book_fl')->getClientOriginalExtension();
+
+			$request->file('book_fl')->move(
+				public_path() . '/public/uploads', $bookfile
+			);
+
+			$fileName = $file->getClientOriginalName();
+			$destinationPath = public_path() . '/images/';
+			$file->move($destinationPath, $fileName);
+			$book->image = $fileName;
+			$book->book_fl = $bookfile;
+		}
+		$book->save();
+		return \Redirect::route('book.index')->withSuccess('Successfully added');
+
 	}
 
 	/**
